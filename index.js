@@ -1,15 +1,16 @@
 var jwt = require('jsonwebtoken');
+const axios = require('axios');
 
 module.exports = function jwtvalidation(sails) {
   return {
-    configure: function(){
-      if (!process.env.JWT_SECRET && !sails.config.jwtSecret) {
-          throw new Error('process.env.JWT_SECRET or sails.config.jwtSecret must be set');
-        }
+    configure: function () {
+      if (!process.env.JWT_SECRET && !sails.config.jwtSecret && !sails.config.custom.authUrl) {
+        throw new Error('process.env.JWT_SECRET or sails.config.jwtSecret or sails.config.custom.authUrl must be set');
+      }
     },
-    initialize: async function() {
-      return new Promise((resolve)=>{
-        sails.on('hook:orm:loaded', ()=>{
+    initialize: async function () {
+      return new Promise((resolve) => {
+        sails.on('hook:orm:loaded', () => {
           // Finish initializing custom hook
           // Then resolve.
           resolve();
@@ -24,28 +25,50 @@ module.exports = function jwtvalidation(sails) {
         // if there's nothing after "Bearer", no go
         if (!token) {
           sails.log.debug('Bearer token was not found on the request');
-          return cb('invalid',_,res,next);
+          return cb('invalid', _, res, next);
         }
         // if there is something, attempt to parse it as a JWT token
         return jwt.verify(token, secret, async function (err, payload) {
           if (err)
-            return cb('error',err,res,next);
+            return cb('error', err, res, next);
           if (!payload.sub) {
             sails.log.debug('Payload subject missing');
-            return cb('invalid',_,res,next);
+            return cb('invalid', _, res, next);
           }
-          var user = await usrHolder.findOne({ userId: payload.sub });
+          var user;
+          if (!_.isObject(usrHolder)) {
+            user = await sendUserGetRequest(payload.sub);
+          } else {
+            user = await usrHolder.findOne({ userId: payload.sub });
+          }
           if (!user) {
             sails.log.debug('Subject id not found in the holder');
-            return cb('invalid',_,res,next);
+            return cb('invalid', _, res, next);
           }
           // if it got this far, everything checks out, success
           req.user = user;
-          return cb('success',_,res,next);;
+          return cb('success', _, res, next);;
         })
       }
       sails.log.debug('Authorization not set');
-      return cb('invalid',_,res,next);
+      return cb('invalid', _, res, next);
     }
   };
 }
+
+const sendUserGetRequest = async (id) => {
+  var resp;
+  try {
+    resp = await axios.get(sails.config.custom.authUrl + `/user?id=${id}`);
+    return resp.data;
+  } catch (err) {
+    if (err.code == 'ENOTFOUND') {
+      sails.log.error(err);
+      return;
+    }
+    if (err.response.status == 404)
+      sails.log.warn("Unauthorized access. Bearer token hacked.");
+      return;
+    sails.log.error(err);
+  }
+};
