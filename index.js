@@ -4,8 +4,11 @@ const axios = require('axios');
 module.exports = function jwtvalidation(sails) {
   return {
     configure: function () {
-      if (!process.env.JWT_SECRET && !sails.config.jwtSecret && !sails.config.custom.authUrl) {
-        throw new Error('process.env.JWT_SECRET or sails.config.jwtSecret or sails.config.custom.authUrl must be set');
+      if (!process.env.JWT_SECRET && !sails.config.jwtSecret) {
+        throw new Error('process.env.JWT_SECRET or sails.config.jwtSecret must be set');
+      }
+      if (!sails.config.custom.authUrl) {
+        throw new Error('sails.config.custom.authUrl must be set');
       }
     },
     initialize: async function () {
