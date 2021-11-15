@@ -7,6 +7,7 @@
     "url": "git+https://github.com/electrily/sails-hook-jwtvalidation.git"
   },
   "dependencies": {
+    "axios": "^0.24.0",
     "jsonwebtoken": "^8.5.1"
   },
   "sails": {
