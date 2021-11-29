@@ -69,9 +69,9 @@ const sendUserGetRequest = async (id) => {
       sails.log.error(err);
       return;
     }
-    if (err.response.status == 404)
-      sails.log.warn("Unauthorized access. Bearer token hacked.");
-      return;
+    // if (err.response.status == 404)
+    //   sails.log.warn("Unauthorized access. Bearer token hacked.");
+    //   return;
     sails.log.error(err);
   }
 };
