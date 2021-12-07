@@ -32,11 +32,8 @@ module.exports = function jwtvalidation(sails) {
         }
         // if there is something, attempt to parse it as a JWT token
         return jwt.verify(token, secret, async function (err, payload) {
-          if (err && err.name === 'TokenExpiredError') {
+          if (err) {
             return cb('expired', err, res, next);
-          }
-          else if (err) {
-            return cb('error', err, res, next);
           }
           if (!payload.sub) {
             sails.log.debug('Payload subject missing');
