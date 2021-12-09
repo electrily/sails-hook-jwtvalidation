@@ -32,8 +32,9 @@ module.exports = function jwtvalidation(sails) {
         }
         // if there is something, attempt to parse it as a JWT token
         return jwt.verify(token, secret, async function (err, payload) {
-          if (err)
-            return cb('error', err, res, next);
+          if (err) {
+            return cb('expired', err, res, next);
+          }
           if (!payload.sub) {
             sails.log.debug('Payload subject missing');
             return cb('invalid', _, res, next);
@@ -65,13 +66,14 @@ const sendUserGetRequest = async (id) => {
     resp = await axios.get(sails.config.custom.authUrl + `/user?id=${id}`);
     return resp.data;
   } catch (err) {
-    if (err.code == 'ENOTFOUND') {
+    if (err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED') {
       sails.log.error(err);
       return;
     }
-    // if (err.response.status == 404)
-    //   sails.log.warn("Unauthorized access. Bearer token hacked.");
-    //   return;
+    if (err.response.status === 404) {
+      sails.log.warn("Unauthorized access. Bearer token hacked.");
+      return;
+    }
     sails.log.error(err);
     return;
   }
