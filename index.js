@@ -40,6 +40,8 @@ module.exports = function jwtvalidation(sails) {
             return cb('invalid', _, res, next);
           }
           var user;
+          sails.log.debug('Is user holder empty ' + !_.isObject(usrHolder));
+          sails.log.debug('Is user holder empty ' + usrHolder);
           if (!_.isObject(usrHolder)) {
             user = await sendUserGetRequest(payload.sub);
           } else {
