@@ -63,7 +63,9 @@ module.exports = function jwtvalidation(sails) {
 const sendUserGetRequest = async (id) => {
   var resp;
   try {
+    sails.log.debug('sails.config.custom.authUrl ' + sails.config.custom.authUrl);
     resp = await axios.get(sails.config.custom.authUrl + `/user?id=${id}`);
+    sails.log.debug('resp.data ' + resp.data);
     return resp.data;
   } catch (err) {
     if (err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED') {
